@@ -38,7 +38,7 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const shared = b.option(bool, "shared", "Create shared library instead of static") orelse false;
 
-    _ = b.addModule("root", .{
+    const rootModule = b.addModule("root", .{
         .root_source_file = b.path("src/portaudio.zig"),
     });
 
@@ -53,6 +53,8 @@ pub fn build(b: *std.Build) !void {
         .linkage = if (shared) .dynamic else .static,
         .root_module = mod,
     });
+
+    rootModule.linkLibrary(lib);
 
     mod.addIncludePath(pa.path("include"));
     mod.addIncludePath(pa.path("src/common"));
