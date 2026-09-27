@@ -38,10 +38,14 @@ pub fn build(b: *std.Build) !void {
     const optimize = b.standardOptimizeOption(.{});
     const shared = b.option(bool, "shared", "Create shared library instead of static") orelse false;
 
+    _ = b.addModule("root", .{
+        .root_source_file = b.path("src/portaudio.zig"),
+    });
+
     const mod = b.createModule(.{
-            .target = target,
-            .optimize = optimize,
-            .link_libc = true,
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
     });
 
     const lib = b.addLibrary(.{
