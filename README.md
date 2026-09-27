@@ -1,6 +1,6 @@
 # PortAudio
 
-This is [PortAudio](https://www.portaudio.com) packaged for Zig.
+This is [PortAudio](https://www.portaudio.com) packaged for Zig. Forked for zig version 0.16
 
 ## Build options
 
