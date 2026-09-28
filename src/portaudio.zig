@@ -251,15 +251,15 @@ extern fn Pa_Terminate() PaErrorType;
 
 // returns error if not supported, otherwise nothing.
 pub fn checkFormatSupported(
-    inputParameters: *const PaStreamParameters,
-    outputParameters: *const PaStreamParameters,
+    inputParameters: ?*const PaStreamParameters,
+    outputParameters: ?*const PaStreamParameters,
     sampleRate: f64,
 ) PaError!void {
     const r = Pa_IsFormatSupported(inputParameters, outputParameters, sampleRate);
     if (r == 0) return;
     return ConvertError(@enumFromInt(r)).?;
 }
-extern fn Pa_IsFormatSupported(inputParameters: *const PaStreamParameters, outputParameters: *const PaStreamParameters, sampleRate: f64) PaErrorType;
+extern fn Pa_IsFormatSupported(inputParameters: ?*const PaStreamParameters, outputParameters: ?*const PaStreamParameters, sampleRate: f64) PaErrorType;
 
 pub fn getSampleSize(format: SampleFormat) PaError.sampleFormatNotSupported!i32 {
     const r = Pa_GetSampleSize(@intFromEnum(format));
@@ -307,18 +307,18 @@ pub const HostApi = struct {
     }
     // returns the host api at an index where
     // 0 <= index < getHostApiCount()
-    pub fn get(hostApi: PaHostApiIndex) *const PaHostApiInfo {
+    pub fn get(hostApi: PaHostApiIndex) ?*const PaHostApiInfo {
         return Pa_GetHostApiInfo(hostApi);
     }
-    pub fn getLastHostErrorInfo() *const PaHostErrorInfo {
+    pub fn getLastHostErrorInfo() ?*const PaHostErrorInfo {
         return Pa_GetLastHostErrorInfo();
     }
 
     extern fn Pa_GetHostApiCount() PaHostApiIndex;
     extern fn Pa_GetDefaultHostApi() PaHostApiIndex;
-    extern fn Pa_GetHostApiInfo(hostApi: PaHostApiIndex) *const PaHostApiInfo;
+    extern fn Pa_GetHostApiInfo(hostApi: PaHostApiIndex) ?*const PaHostApiInfo;
     extern fn Pa_HostApiTypeIdToHostApiIndex(type: HostApiTypeId) PaHostApiIndex;
-    extern fn Pa_GetLastHostErrorInfo() *const PaHostErrorInfo;
+    extern fn Pa_GetLastHostErrorInfo() ?*const PaHostErrorInfo;
 };
 
 pub const Device = struct {
@@ -344,14 +344,14 @@ pub const Device = struct {
     }
     // returns the device at an index where
     // 0 <= index < getDeviceCount()
-    pub fn get(device: PaDeviceIndex) *const PaDeviceInfo {
+    pub fn get(device: PaDeviceIndex) ?*const PaDeviceInfo {
         return Pa_GetDeviceInfo(device);
     }
 
     extern fn Pa_GetDeviceCount() PaDeviceIndex;
     extern fn Pa_GetDefaultInputDevice() PaDeviceIndex;
     extern fn Pa_GetDefaultOutputDevice() PaDeviceIndex;
-    extern fn Pa_GetDeviceInfo(device: PaDeviceIndex) *const PaDeviceInfo;
+    extern fn Pa_GetDeviceInfo(device: PaDeviceIndex) ?*const PaDeviceInfo;
     extern fn Pa_HostApiDeviceIndexToDeviceIndex(hostApi: PaHostApiIndex, hostApiDeviceIndex: i32) PaDeviceIndex;
 };
 
@@ -359,12 +359,12 @@ pub const Stream = struct {
     handle: *PaStream,
 
     pub fn init(args: struct {
-        inputParameters: *const PaStreamParameters,
-        outputParameters: *const PaStreamParameters,
+        inputParameters: ?*const PaStreamParameters,
+        outputParameters: ?*const PaStreamParameters,
         sampleRate: f64,
         framesPerBuffer: u64,
         streamFlags: StreamFlags = .{},
-        streamCallback: *const PaStreamCallback,
+        streamCallback: ?*const PaStreamCallback,
         userData: ?*anyopaque = null,
     }) PaError!Stream {
         var s = Stream{ .handle = undefined };
@@ -391,7 +391,7 @@ pub const Stream = struct {
         sampleRate: f64,
         framesPerBuffer: u64,
         streamFlags: StreamFlags = .{},
-        streamCallback: *PaStreamCallback,
+        streamCallback: ?*PaStreamCallback,
         userData: ?*anyopaque = null,
     }) PaError!Stream {
         var s = Stream{ .handle = undefined };
@@ -416,7 +416,7 @@ pub const Stream = struct {
         if (ConvertError(@enumFromInt(err))) |e| return e;
     }
 
-    pub fn setStreamFinishedCallback(self: Stream, streamFinishedCallback: *PaStreamFinishedCallback) PaError!void {
+    pub fn setStreamFinishedCallback(self: Stream, streamFinishedCallback: ?*PaStreamFinishedCallback) PaError!void {
         const err = Pa_SetStreamFinishedCallback(self.handle, streamFinishedCallback);
         if (ConvertError(@enumFromInt(err))) |e| return e;
     }
@@ -446,7 +446,7 @@ pub const Stream = struct {
         if (ConvertError(@enumFromInt(err))) |e| return e;
         return PaError.unknownError;
     }
-    pub fn getStreamInfo(self: Stream) *const PaStreamInfo {
+    pub fn getStreamInfo(self: Stream) ?*const PaStreamInfo {
         return Pa_GetStreamInfo(self.handle);
     }
     pub fn getStreamTime(self: Stream) PaTime {
@@ -472,12 +472,12 @@ pub const Stream = struct {
 
     extern fn Pa_OpenStream(
         stream: **PaStream,
-        inputParameters: *const PaStreamParameters,
-        outputParameters: *const PaStreamParameters,
+        inputParameters: ?*const PaStreamParameters,
+        outputParameters: ?*const PaStreamParameters,
         sampleRate: f64,
         framesPerBuffer: u64,
         streamFlags: PaStreamFlags,
-        streamCallback: *const PaStreamCallback,
+        streamCallback: ?*const PaStreamCallback,
         userData: ?*anyopaque,
     ) callconv(.c) PaErrorType;
     extern fn Pa_OpenDefaultStream(
@@ -487,20 +487,20 @@ pub const Stream = struct {
         sampleFormat: PaSampleFormat,
         sampleRate: f64,
         framesPerBuffer: u64,
-        streamCallback: *const PaStreamCallback,
+        streamCallback: ?*const PaStreamCallback,
         userData: ?*anyopaque,
     ) callconv(.c) PaErrorType;
     extern fn Pa_CloseStream(stream: *PaStream) PaErrorType;
     extern fn Pa_SetStreamFinishedCallback(
         stream: *PaStream,
-        streamFinishedCallback: *PaStreamFinishedCallback,
+        streamFinishedCallback: ?*PaStreamFinishedCallback,
     ) PaErrorType;
     extern fn Pa_StartStream(stream: *PaStream) PaErrorType;
     extern fn Pa_StopStream(stream: *PaStream) PaErrorType;
     extern fn Pa_AbortStream(stream: *PaStream) PaErrorType;
     extern fn Pa_IsStreamStopped(stream: *PaStream) PaErrorType;
     extern fn Pa_IsStreamActive(stream: *PaStream) PaErrorType;
-    extern fn Pa_GetStreamInfo(stream: *PaStream) *const PaStreamInfo;
+    extern fn Pa_GetStreamInfo(stream: *PaStream) ?*const PaStreamInfo;
     extern fn Pa_GetStreamTime(stream: *PaStream) PaTime;
     extern fn Pa_GetStreamCpuLoad(stream: *PaStream) f64;
     extern fn Pa_ReadStream(stream: *PaStream, buffer: ?*anyopaque, frames: u64) PaErrorType;
